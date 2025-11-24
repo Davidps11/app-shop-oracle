@@ -18,20 +18,20 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack>
+      <Stack screenOptions={{ headerShown: false }}>
         {/* Pantalla de bienvenida */}
         <Stack.Screen name="welcome" options={{ headerShown: false }} />
 
-        {/* Tus tabs actuales (index/explore) */}
+        {/* Tus tabs actuales */}
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 
         {/* Pantalla de login */}
-        <Stack.Screen name="login" options={{ title: "Iniciar sesión" }} />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
 
-        {/* Modal que ya tenías */}
+        {/* Modal */}
         <Stack.Screen
           name="modal"
-          options={{ presentation: "modal", title: "Modal" }}
+          options={{ presentation: "modal", headerShown: false }}
         />
       </Stack>
       <StatusBar style="auto" />
