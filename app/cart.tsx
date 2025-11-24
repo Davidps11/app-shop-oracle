@@ -11,11 +11,15 @@ import {
 } from "react-native";
 import { IconButton } from "react-native-paper";
 import { Colors } from "../constants/theme";
+import { useAuthStore } from "../stores/useAuthStore";
 
 const RED = "#EA0040";
 
 export default function CartScreen() {
   const router = useRouter();
+
+  // Estado real del usuario
+  const customerId = useAuthStore((state) => state.customer_id);
 
   // Temporal: carrito vacío
   const isEmpty = true;
@@ -26,18 +30,13 @@ export default function CartScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       <SafeAreaView style={styles.safeArea}>
-        {/* FLECHA IGUAL A LOGIN */}
+        {/* FLECHA ROJA (igual al login) */}
         <IconButton
           icon="arrow-left"
           size={28}
           iconColor={Colors.light.tint}
           onPress={() => router.push("/public-home")}
-          style={{
-            position: "absolute",
-            top: 50,
-            left: 20,
-            zIndex: 10,
-          }}
+          style={styles.backButton}
         />
 
         {/* TÍTULO */}
@@ -46,6 +45,7 @@ export default function CartScreen() {
         <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
           {isEmpty ? (
             <View style={styles.emptyContainer}>
+              {/* Imagen vacía */}
               <Image
                 source={require("@/assets/images/cart.png")}
                 style={styles.emptyImage}
@@ -57,16 +57,19 @@ export default function CartScreen() {
                 Agrega productos para verlos aquí.
               </Text>
 
-              <TouchableOpacity
-                onPress={() => router.push("/login")}
-                style={styles.loginButton}
-              >
-                <Text style={styles.loginButtonText}>Iniciar sesión</Text>
-              </TouchableOpacity>
+              {/* SOLO mostrar botón si NO está loggeada */}
+              {!customerId && (
+                <TouchableOpacity
+                  onPress={() => router.push("/login")}
+                  style={styles.loginButton}
+                >
+                  <Text style={styles.loginButtonText}>Iniciar sesión</Text>
+                </TouchableOpacity>
+              )}
             </View>
           ) : (
             <View style={{ paddingHorizontal: 20 }}>
-              {/* Aquí irán las cards del carrito cuando lo implementemos */}
+              {/* Aquí irán las cards cuando el carrito tenga productos */}
             </View>
           )}
         </ScrollView>
@@ -79,6 +82,13 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#fff",
+  },
+
+  backButton: {
+    position: "absolute",
+    top: 50,
+    left: 20,
+    zIndex: 10,
   },
 
   title: {
