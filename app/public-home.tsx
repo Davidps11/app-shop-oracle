@@ -60,7 +60,7 @@ export default function PublicHomeScreen() {
               icon="arrow-left"
               size={26}
               iconColor={Colors.light.tint}
-              onPress={() => router.replace("/welcome")}
+              onPress={() => router.back()}
               style={styles.backButton}
             />
 
