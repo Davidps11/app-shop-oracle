@@ -8,13 +8,15 @@ const walletPath = path.join(__dirname, "../../wallet");
 
 process.env.TNS_ADMIN = walletPath;
 
+export const oracleConfig = {
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  connectString: process.env.DB_CONNECTION, // team3vectordatabase_high
+};
+
 export async function initOracle() {
   try {
-    await oracledb.createPool({
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      connectString: process.env.DB_CONNECTION, // team3vectordatabase_high
-    });
+    await oracledb.createPool(oracleConfig);
 
     console.log("🔗 Oracle DB pool initialized");
   } catch (err) {
