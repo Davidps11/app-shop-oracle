@@ -10,7 +10,9 @@ app.use(cors());
 app.use(express.json());
 
 import customerRoutes from "./routes/customer.routes";
+import productRoutes from "./routes/product.routes";
 app.use("/api/customer", customerRoutes);
+app.use("/api/products", productRoutes);
 
 initOracle();
 
