@@ -100,7 +100,7 @@ export default function LoginScreen() {
           icon="arrow-left"
           size={28}
           iconColor={Colors.light.tint}
-          onPress={() => router.back()}
+          onPress={() => router.replace("/welcome")}
           style={{
             position: "absolute",
             top: 50,
