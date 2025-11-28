@@ -1,6 +1,6 @@
 // app/product/[id].tsx
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Image,
   SafeAreaView,
@@ -15,8 +15,14 @@ import { useCartStore } from "../../stores/useCartStore";
 
 const RED = "#EA0040";
 
-// 🔹 Extraer información de descriptionVector
-const parseDescription = (text?: string) => {
+type ApiProduct = {
+  articleId: number;
+  imageUrl: string | null;
+  descriptionVector: string | null;
+};
+
+// Extraer información de descriptionVector
+const parseDescription = (text?: string | null) => {
   if (!text) {
     return { name: "Producto", group: "", color: "", type: "", detail: "" };
   }
@@ -37,7 +43,7 @@ const parseDescription = (text?: string) => {
 };
 
 export default function ProductDetailScreen() {
-  const router = useRouter(); // 👈 AHORA USAMOS useRouter (como en cart.tsx)
+  const router = useRouter();
 
   const params = useLocalSearchParams<{
     id?: string;
@@ -53,6 +59,36 @@ export default function ProductDetailScreen() {
 
   const { name, group, color, type, detail } = parseDescription(description);
 
+  const [similarProducts, setSimilarProducts] = useState<ApiProduct[]>([]);
+
+  // Cargar productos similares desde la API
+  useEffect(() => {
+    const fetchSimilar = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/products");
+        const json = await res.json();
+
+        if (!json.success || !Array.isArray(json.data)) {
+          console.warn("Respuesta inesperada de /api/products:", json);
+          return;
+        }
+
+        const all: ApiProduct[] = json.data;
+
+        // 👇 Quitamos el producto actual y tomamos los primeros 10
+        const others = all.filter((p) => p.articleId !== Number(id));
+
+        setSimilarProducts(others.slice(0, 10));
+      } catch (error) {
+        console.error("Error cargando productos similares:", error);
+      }
+    };
+
+    if (id) {
+      fetchSimilar();
+    }
+  }, [id]);
+
   const handleAddToCart = () => {
     addItem({
       articleId: Number(id),
@@ -63,22 +99,37 @@ export default function ProductDetailScreen() {
     router.push("/cart");
   };
 
+  const getProductName = (desc: string | null) =>
+    parseDescription(desc).name || "Producto";
+
+  const handleOpenSimilar = (product: ApiProduct) => {
+    router.push({
+      pathname: "/product/[id]",
+      params: {
+        id: product.articleId.toString(),
+        imageUrl: product.imageUrl ?? "",
+        description: product.descriptionVector ?? "",
+      },
+    });
+  };
+
   return (
     <>
       {/* Ocultamos header nativo */}
       <Stack.Screen options={{ headerShown: false }} />
 
       <SafeAreaView style={styles.safeArea}>
-        {/* 🔥 Flecha igual a la de CartScreen */}
+        {/* Flecha de regreso */}
         <IconButton
           icon="arrow-left"
-          size={28}
+          size={30}
           iconColor={RED}
           onPress={() => router.back()}
           style={styles.backButton}
         />
 
         <ScrollView contentContainerStyle={styles.content}>
+          {/* CARD PRINCIPAL */}
           <View style={styles.card}>
             {/* Imagen */}
             {imageUrl ? (
@@ -120,10 +171,59 @@ export default function ProductDetailScreen() {
             </View>
 
             {/* Botón agregar al carrito */}
-            <TouchableOpacity style={styles.addCartButton} onPress={handleAddToCart}>
+            <TouchableOpacity
+              style={styles.addCartButton}
+              onPress={handleAddToCart}
+            >
               <Text style={styles.addCartText}>Agregar al carrito 🛒</Text>
             </TouchableOpacity>
           </View>
+
+          {/* SECCIÓN DE PRODUCTOS SIMILARES (reales) */}
+          {similarProducts.length > 0 && (
+            <>
+              <Text style={styles.similarTitle}>Productos similares</Text>
+
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.similarList}
+              >
+                {similarProducts.map((p) => (
+                  <View key={p.articleId.toString()} style={styles.similarCard}>
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={() => handleOpenSimilar(p)}
+                      style={{ width: "100%" }}
+                    >
+                      {p.imageUrl ? (
+                        <Image
+                          source={{ uri: p.imageUrl }}
+                          style={styles.similarImage}
+                        />
+                      ) : (
+                        <View style={styles.similarImagePlaceholder}>
+                          <Text>Sin imagen</Text>
+                        </View>
+                      )}
+
+                      <Text style={styles.similarName} numberOfLines={2}>
+                        {getProductName(p.descriptionVector)}
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Botón COMPRAR */}
+                    <TouchableOpacity
+                      style={styles.buyButton}
+                      onPress={() => handleOpenSimilar(p)}
+                    >
+                      <Text style={styles.buyButtonText}>Comprar</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </ScrollView>
+            </>
+          )}
         </ScrollView>
       </SafeAreaView>
     </>
@@ -146,12 +246,14 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
     paddingTop: 100, // espacio para la flecha
+    paddingBottom: 40,
   },
 
   card: {
     backgroundColor: "#fafafa",
     borderRadius: 20,
     padding: 16,
+    marginBottom: 24,
   },
 
   image: {
@@ -205,12 +307,73 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 14,
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 4,
   },
 
   addCartText: {
     fontSize: 16,
     fontWeight: "700",
     color: "#fff",
+  },
+
+  // Estilos productos similares
+  similarTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#333",
+    marginBottom: 12,
+  },
+
+  similarList: {
+    paddingBottom: 10,
+  },
+
+  similarCard: {
+    width: 140,
+    marginRight: 12,
+    backgroundColor: "#fafafa",
+    borderRadius: 16,
+    padding: 10,
+    alignItems: "center",
+  },
+
+  similarImage: {
+    width: "100%",
+    height: 100,
+    borderRadius: 12,
+    marginBottom: 8,
+    resizeMode: "cover",
+  },
+
+  similarImagePlaceholder: {
+    width: "100%",
+    height: 100,
+    borderRadius: 12,
+    marginBottom: 8,
+    backgroundColor: "#eee",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  similarName: {
+    fontSize: 13,
+    fontWeight: "500",
+    textAlign: "center",
+    color: "#333",
+  },
+
+  buyButton: {
+    marginTop: 8,
+    backgroundColor: RED,
+    paddingVertical: 8,
+    borderRadius: 10,
+    width: "100%",
+    alignItems: "center",
+  },
+
+  buyButtonText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 14,
   },
 });

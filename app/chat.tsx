@@ -1,6 +1,7 @@
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { router } from "expo-router";
 import { useRef, useState } from "react";
+import { Alert } from "react-native";
 import {
   Image,
   ScrollView,
@@ -11,6 +12,8 @@ import {
   View,
 } from "react-native";
 import { useChat } from "../hooks/useChat";
+
+const RED = "#EA0040";
 
 export default function ChatScreen() {
   const { messages, loading, sendUserMessage, sendQuickRecommend } = useChat();
@@ -28,19 +31,31 @@ export default function ChatScreen() {
     }, 200);
   };
 
+  // 🔹 Navegar al detalle del producto desde el chat
+  const handleBuyNow = (item: any) => {
+    router.push({
+      pathname: "/product/[id]",
+      params: {
+        id: String(item.article_id),
+        imageUrl: item.image_url ?? "",
+        description: item.description_vector ?? "", // si tu API lo manda
+      },
+    });
+  };
+
   return (
     <View style={styles.container}>
       {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <IconSymbol name="chevron.left" size={28} color="#EA0040" />
+          <IconSymbol name="chevron.left" size={28} color={RED} />
         </TouchableOpacity>
 
         <Text style={styles.headerText}>Chat de ayuda</Text>
 
         {/* Botón de recomendaciones rápidas */}
         <TouchableOpacity onPress={sendQuickRecommend}>
-          <IconSymbol name="sparkles" size={26} color="#EA0040" />
+          <IconSymbol name="sparkles" size={26} color={RED} />
         </TouchableOpacity>
       </View>
 
@@ -72,6 +87,15 @@ export default function ChatScreen() {
                     />
                     <Text style={styles.cardName}>{item.name}</Text>
                     <Text style={styles.cardGroup}>{item.group}</Text>
+
+                    {/* Botón COMPRAR AHORA */}
+                    <TouchableOpacity
+  style={styles.buyButton}
+  onPress={() => Alert.alert("Producto listo para comprar")}
+>
+  <Text style={styles.buyButtonText}>Comprar ahora</Text>
+</TouchableOpacity>
+
                   </View>
                 ))}
               </View>
@@ -114,7 +138,7 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#EA0040",
+    color: RED,
   },
 
   chatArea: {
@@ -130,7 +154,7 @@ const styles = StyleSheet.create({
   },
 
   userMsg: {
-    backgroundColor: "#EA0040",
+    backgroundColor: RED,
     alignSelf: "flex-end",
   },
 
@@ -164,7 +188,7 @@ const styles = StyleSheet.create({
   },
 
   sendButton: {
-    backgroundColor: "#EA0040",
+    backgroundColor: RED,
     padding: 12,
     borderRadius: 10,
     marginLeft: 10,
@@ -194,12 +218,29 @@ const styles = StyleSheet.create({
 
   cardName: {
     fontWeight: "600",
-    padding: 6,
+    paddingHorizontal: 8,
+    paddingTop: 8,
   },
 
   cardGroup: {
-    paddingLeft: 6,
-    paddingBottom: 10,
+    paddingHorizontal: 8,
+    paddingBottom: 8,
     color: "#888",
+  },
+
+  buyButton: {
+    backgroundColor: RED,
+    marginHorizontal: 8,
+    marginBottom: 10,
+    marginTop: 4,
+    borderRadius: 10,
+    paddingVertical: 8,
+    alignItems: "center",
+  },
+
+  buyButtonText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 14,
   },
 });
