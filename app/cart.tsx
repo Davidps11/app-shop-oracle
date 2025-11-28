@@ -1,3 +1,4 @@
+// app/cart.tsx
 import { Stack, useRouter } from "expo-router";
 import React from "react";
 import {
@@ -16,6 +17,12 @@ import { useCartStore } from "../stores/useCartStore";
 
 const RED = "#EA0040";
 
+// Extraer el nombre real del descriptionVector
+const getProductName = (text: string) => {
+  const match = text?.match(/NOMBRE:\s*([^;]+)/i);
+  return match ? match[1].trim() : "Producto";
+};
+
 export default function CartScreen() {
   const router = useRouter();
 
@@ -23,6 +30,12 @@ export default function CartScreen() {
 
   const items = useCartStore((state) => state.items);
   const clearCart = useCartStore((state) => state.clearCart);
+  const incrementQuantity = useCartStore(
+    (state) => state.incrementQuantity
+  );
+  const decrementQuantity = useCartStore(
+    (state) => state.decrementQuantity
+  );
 
   const isEmpty = items.length === 0;
 
@@ -77,10 +90,12 @@ export default function CartScreen() {
                       <Text>Sin imagen</Text>
                     </View>
                   )}
+
                   <View style={styles.itemInfo}>
                     <Text style={styles.itemTitle}>
-                      Producto #{item.articleId}
+                      {getProductName(item.description)}
                     </Text>
+
                     <Text
                       style={styles.itemDescription}
                       numberOfLines={2}
@@ -88,6 +103,31 @@ export default function CartScreen() {
                     >
                       {item.description}
                     </Text>
+
+                    {/* Controles de cantidad */}
+                    <View style={styles.quantityRow}>
+                      <TouchableOpacity
+                        style={styles.qtyButton}
+                        onPress={() =>
+                          decrementQuantity(item.articleId)
+                        }
+                      >
+                        <Text style={styles.qtyButtonText}>−</Text>
+                      </TouchableOpacity>
+
+                      <Text style={styles.qtyValue}>
+                        {item.quantity}
+                      </Text>
+
+                      <TouchableOpacity
+                        style={styles.qtyButton}
+                        onPress={() =>
+                          incrementQuantity(item.articleId)
+                        }
+                      >
+                        <Text style={styles.qtyButtonText}>+</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
               ))}
@@ -195,7 +235,34 @@ const styles = StyleSheet.create({
   itemDescription: {
     fontSize: 13,
     color: "#555",
+    marginBottom: 8,
   },
+
+  quantityRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+  },
+  qtyButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: RED,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  qtyButtonText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: RED,
+  },
+  qtyValue: {
+    marginHorizontal: 12,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+
   clearButton: {
     marginTop: 10,
     backgroundColor: "#eee",
