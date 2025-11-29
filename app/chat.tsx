@@ -37,21 +37,12 @@ export default function ChatScreen() {
   const buildDescriptionFromChat = (item: any) => {
     const parts: string[] = [];
 
-    if (item.name) {
-      parts.push(`NOMBRE: ${item.name};`);
-    }
-    if (item.group) {
-      parts.push(` GRUPO: ${item.group};`);
-    }
-    if (item.color) {
-      parts.push(` COLOR: ${item.color};`);
-    }
-    if (item.type) {
-      parts.push(` TIPO: ${item.type};`);
-    }
+    if (item.name) parts.push(`NOMBRE: ${item.name};`);
+    if (item.group) parts.push(` GRUPO: ${item.group};`);
+    if (item.color) parts.push(` COLOR: ${item.color};`);
+    if (item.type) parts.push(` TIPO: ${item.type};`);
     if (item.detail || item.details || item.description) {
-      const detailValue =
-        item.detail ?? item.details ?? item.description;
+      const detailValue = item.detail ?? item.details ?? item.description;
       parts.push(` DETALLE: ${detailValue};`);
     }
 
@@ -92,7 +83,6 @@ export default function ChatScreen() {
 
         <Text style={styles.headerText}>Chat de ayuda</Text>
 
-        {/* Botón de recomendaciones rápidas */}
         <TouchableOpacity onPress={sendQuickRecommend}>
           <IconSymbol name="sparkles" size={26} color={RED} />
         </TouchableOpacity>
@@ -100,10 +90,12 @@ export default function ChatScreen() {
 
       {/* MENSAJES */}
       <ScrollView style={styles.chatArea} ref={scrollRef}>
-        {/* Mensaje inicial */}
-        <Text style={styles.botMsg}>
-          ¡Hola! 👋 Soy tu asistente. ¿En qué puedo ayudarte hoy?
-        </Text>
+        {/* Mensaje inicial como burbuja del bot */}
+        <View style={[styles.msgBubble, styles.botMsg]}>
+          <Text style={[styles.msgText, styles.msgTextBot]}>
+            ¡Hola! 👋 Soy tu asistente. ¿En qué puedo ayudarte hoy?
+          </Text>
+        </View>
 
         {messages.map((msg) => (
           <View
@@ -113,7 +105,18 @@ export default function ChatScreen() {
               msg.sender === "user" ? styles.userMsg : styles.botMsg,
             ]}
           >
-            {msg.text && <Text style={styles.msgText}>{msg.text}</Text>}
+            {msg.text && (
+              <Text
+                style={[
+                  styles.msgText,
+                  msg.sender === "user"
+                    ? styles.msgTextUser
+                    : styles.msgTextBot,
+                ]}
+              >
+                {msg.text}
+              </Text>
+            )}
 
             {/* Renderizar productos si vienen en products */}
             {msg.products && (
@@ -149,7 +152,9 @@ export default function ChatScreen() {
           </View>
         ))}
 
-        {loading && <Text style={styles.loading}>Pensando... 🤖💭</Text>}
+        {loading && (
+          <Text style={styles.loading}>Pensando...</Text>
+        )}
       </ScrollView>
 
       {/* INPUT */}
@@ -166,7 +171,6 @@ export default function ChatScreen() {
         </TouchableOpacity>
       </View>
     </View>
-    
   );
 }
 
@@ -180,6 +184,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 15,
     justifyContent: "space-between",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+    backgroundColor: "#fff",
   },
 
   headerText: {
@@ -190,27 +197,42 @@ const styles = StyleSheet.create({
 
   chatArea: {
     flex: 1,
-    padding: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#F6F7FB",
   },
 
+  // 🔹 Burbuja base
   msgBubble: {
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 12,
-    maxWidth: "85%",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 18,
+    marginBottom: 10,
+    maxWidth: "80%",
   },
 
+  // 🔹 Burbuja del usuario
   userMsg: {
     backgroundColor: RED,
     alignSelf: "flex-end",
+    borderBottomRightRadius: 4,
   },
 
+  // 🔹 Burbuja del bot
   botMsg: {
     backgroundColor: "#FFE6EC",
     alignSelf: "flex-start",
+    borderBottomLeftRadius: 4,
   },
 
+  // Texto genérico
   msgText: {
+    fontSize: 15,
+  },
+  msgTextUser: {
+    color: "#fff",
+  },
+  msgTextBot: {
     color: "#333",
   },
 
@@ -218,6 +240,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     color: "#999",
     fontStyle: "italic",
+    alignSelf: "center",
   },
 
   inputArea: {
@@ -225,20 +248,24 @@ const styles = StyleSheet.create({
     padding: 10,
     borderTopWidth: 1,
     borderColor: "#eee",
+    backgroundColor: "#fff",
   },
 
   input: {
     flex: 1,
     backgroundColor: "#f2f2f2",
     padding: 12,
-    borderRadius: 10,
+    borderRadius: 20,
+    fontSize: 15,
   },
 
   sendButton: {
     backgroundColor: RED,
     padding: 12,
-    borderRadius: 10,
+    borderRadius: 20,
     marginLeft: 10,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   /* PRODUCTOS */
@@ -249,12 +276,13 @@ const styles = StyleSheet.create({
   card: {
     marginBottom: 15,
     backgroundColor: "#fff",
-    borderRadius: 10,
+    borderRadius: 14,
     overflow: "hidden",
     elevation: 3,
     shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
   },
 
   cardImage: {
@@ -265,19 +293,21 @@ const styles = StyleSheet.create({
 
   cardName: {
     fontWeight: "600",
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     paddingTop: 8,
+    fontSize: 15,
   },
 
   cardGroup: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     color: "#888",
     marginBottom: 6,
+    fontSize: 13,
   },
 
   buyButton: {
     backgroundColor: RED,
-    marginHorizontal: 8,
+    marginHorizontal: 10,
     marginBottom: 10,
     borderRadius: 10,
     paddingVertical: 8,
